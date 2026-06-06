@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melissa Ruvaneth: Tomo de Luxúria e Sangue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #b08d57;
+            --blood: #800000;
+            --parchment: #e8dcc4;
+            --velvet: #1a0505;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #050000;
+            background-image: 
+                radial-gradient(circle, rgba(128,0,0,0.2) 0%, #000 100%),
+                url('https://www.transparenttextures.com/patterns/dark-leather.png');
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'IM Fell English', serif;
+            overflow: hidden;
+        }
+
+        .tomo-container {
+            width: 90vw;
+            max-width: 1200px;
+            height: 82vh;
+            display: flex;
+            position: relative;
+        }
+
+        /* Estrutura do Livro Aberto */
+        .page-wrapper {
+            flex: 1;
+            background: var(--parchment);
+            background-image: url('https://www.transparenttextures.com/patterns/old-paper.png');
+            box-shadow: 0 0 60px rgba(0,0,0,0.9), inset 0 0 100px rgba(0,0,0,0.15);
+            border: 2px solid #b8a68b;
+            display: flex;
+            position: relative;
+            border-radius: 4px;
+        }
+
+        .spine {
+            width: 34px;
+            background: linear-gradient(to right, #dcd0b8, #b0a58e, #dcd0b8);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.25);
+            position: relative;
+            z-index: 5;
+        }
+
+        .spine::after {
+            content: "";
+            position: absolute;
+            left: 50%; top: 0; bottom: 0;
+            width: 1px; background: rgba(0,0,0,0.15);
+        }
+
+        .page-side {
+            flex: 1;
+            padding: 45px 50px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Nós de Conteúdo Dinâmico */
+        .content-node {
+            display: none;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            height: 100%;
+        }
+
+        .content-node.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        h2 {
+            font-family: 'UnifrakturMaguntia', serif;
+            color: var(--blood);
+            font-size: 2.1rem;
+            margin: 0 0 5px 0;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-family: 'Cinzel Decorative', cursive;
+            color: #5e4c31;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 5px;
+        }
+
+        p {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: #1c1410;
+            text-align: justify;
+            margin: 0 0 15px 0;
+        }
+
+        .drop-cap {
+            float: left;
+            font-size: 4rem;
+            line-height: 0.8;
+            padding-right: 8px;
+            color: var(--blood);
+            font-family: 'UnifrakturMaguntia', serif;
+        }
+
+        .venom-box {
+            border: 1px solid var(--gold);
+            padding: 18px;
+            margin: 12px 0;
+            background: rgba(128, 0, 0, 0.04);
+            font-style: italic;
+            position: relative;
+            font-size: 1.05rem;
+            line-height: 1.55;
+            color: #4a0000;
+        }
+
+        .venom-box::before {
+            content: "❦ O Monólogo de Dona ❦";
+            position: absolute;
+            top: -10px; left: 50%;
+            transform: translateX(-50%);
+            background: #e4d7be;
+            padding: 0 10px;
+            color: var(--blood);
+            font-family: 'Cinzel Decorative', cursive;
+            font-size: 0.8rem;
+        }
+
+        /* Controles do Rodapé */
+        .controls {
+            position: absolute;
+            bottom: -65px;
+            left: 0; right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 25px;
+            font-family: 'Cinzel Decorative', cursive;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 15px rgba(176, 141, 87, 0.4);
+        }
+
+        .nav-btn:disabled { color: #444; border-color: #444; cursor: not-allowed; }
+
+        .page-info { 
+            color: var(--gold); 
+            font-size: 1.1rem; 
+            font-family: 'Cinzel Decorative', cursive;
+            letter-spacing: 1px;
+        }
+
+        /* Modal do Índice */
+        .index-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 0, 0, 0.95);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .index-content {
+            border: 2px solid var(--gold);
+            background: var(--velvet);
+            padding: 40px;
+            max-width: 550px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(128,0,0,0.6);
+        }
+
+        .index-content h3 {
+            font-family: 'UnifrakturMaguntia', serif;
+            color: var(--gold);
+            font-size: 2.5rem;
+            margin: 0 0 25px 0;
+        }
+
+        .index-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .index-item {
+            font-family: 'Cinzel Decorative', cursive;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+            padding: 5px;
+        }
+
+        .index-item:hover {
+            color: var(--blood);
+            text-shadow: 0 0 10px rgba(255,0,0,0.5);
+            transform: scale(1.02);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="tomo-container">
+    
+    <div class="index-modal" id="indexModal">
+        <div class="index-content">
+            <h3>Índice do Tomo</h3>
+            <div class="index-list">
+                <div class="index-item" onclick="jumpToChapter(0)">Entrada I: Dias de Fuligem</div>
+                <div class="index-item" onclick="jumpToChapter(1)">Entrada II: A Noite Escura da Alma</div>
+                <div class="index-item" onclick="jumpToChapter(2)">Entrada III: O Encontro, o Blefe e a Âncora</div>
+                <div class="index-item" onclick="jumpToChapter(5)">Entrada IV: O Eclipse e o Recomeço</div>
+                <div class="index-item" onclick="jumpToChapter(8)">Entrada V: A Natureza da Fera e a Chave Desligada</div>
+            </div>
+            <br><br>
+            <button class="nav-btn" onclick="toggleIndex(false)">Fechar</button>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+        <div class="page-side">
+            <div class="content-node page-0 active">
+                <h2>Dias de Fuligem</h2>
+                <div class="subtitle">Velmora, sete anos antes da fuga</div>
+                <p><span class="drop-cap">M</span>ais um manto de veludo carmesim entregue para a luxuosa carruagem dos nobres que passam pelo Mercado do Mundo. Fiquei observando de longe o caimento do tecido, a postura impecável deles, o ouro brilhando sob o sol... É aquilo o que eu quero para mim. É ali que eu pertenço.</p>
+                <p>Mas, por enquanto, meus dedos estão calejados de puxar a agulha e minhas unhas estão sujas da poeira que sobe desse beco. Olhei para as mãos de Dona hoje enquanto ela cortava o linho. Estão gastas, rachadas, sem vida. É isso o que a pobreza faz? Ela te deforma, te deixa feia.</p>
+            </div>
+
+            <div class="content-node page-1">
+                <h2>A Noite Escura da Alma</h2>
+                <div class="subtitle">Velmora, a noite da discussão — Aos 25 anos</div>
+                <p><span class="drop-cap">E</span>sse quarto dos fundos cheira a mofo e a pano barato. Aquela velha desgraçada me trancou aqui como se eu fosse um bicho, um estorvo. Minhas bochechas ainda estão ardendo do tapa que a gente trocou, mas eu não vou derramar uma lágrima por ela. Chorei de pura raiva, uma fúria que quase me sufoca. Eu não sinto pena de deixar aquela boutique para trás; nunca recebi amor ali mesmo.</p>
+            </div>
+
+            <div class="content-node page-2">
+                <h2>O Encontro, o Blefe e a Âncora</h2>
+                <div class="subtitle">Porto Âmbar, dois anos após a fuga</div>
+                <p><span class="drop-cap">P</span>orto Âmbar é gigante e brilha como ouro, exatamente como eu sempre sonhei. Engoli meu orgulho e limpei muita sujeira daquelas tabernas barulhentas para conseguir comprar minhas próprias tesouras de novo. Eu precisava me aproximar da alta sociedade.</p>
+                <p>A grande mudança na minha postura aconteceu por causa de uma cliente da alfaiataria, uma nobre de presença magnética, com longos cabelos vermelhos, impecavelmente hidratados e brilhantes, que pareciam pegar fogo sob a luz das velas.</p>
+            </div>
+
+            <div class="content-node page-3">
+                <h2>O Encontro, o Blefe e a Âncora</h2>
+                <div class="subtitle">Porto Âmbar, dois anos após a fuga</div>
+                <p>Segui suas palavras à risca. Fiz dos meus trajes a minha armadura aristocrática. E foi justamente assim, impecável, que recebi o homem que mudaria o meu destino na alfaiataria. Elric. Quando ele entrou pela porta, sua postura me impressionou instantaneamente. Ele era elegante, falava com uma calma intrigante e tinha um senso de humor meio engraçado, irônico, que me pegou de surpresa.</p>
+                <p>But havia mistérios nele. Metade do seu rosto guardava um aspecto completamente diferente, marcado e desfigurado, que ele tentava esconder com o cabelo e a postura. Além disso, notei uma prótese muito estranha no lugar de sua mão direita, de onde saía um fio constante de fumaça.</p>
+            </div>
+
+            <div class="content-node page-4">
+                <h2>O Encontro, o Blefe e a Âncora</h2>
+                <div class="subtitle">Porto Âmbar, dois anos após a fuga</div>
+                <p>Mas conforme as visitas se tornavam frequentes, as mentiras e as aparências foram caindo. Descobri que ele não era nobre. Na verdade, ele era um ferreiro. Aquela fumaça que me intrigava tanto vinha do carvão queimando em um pequeno compartimento interno, mantendo o mecanismo daquela curiosa prótese de aço escuro funcionando. Ele havia perdido o braço direito de forma trágica, enquanto forjava uma arma que acabou levando a uma explosão catastrófica em sua oficina.</p>
+                <p>Quando descobri toda a verdade sobre a sua origem humilde e sua oficina cheia de fuligem... já era tarde demais. Eu já havia me apegado a ele de um jeito que nunca achei possível.</p>
+            </div>
+
+            <div class="content-node page-5">
+                <h2>O Eclipse e o Recomeço</h2>
+                <div class="subtitle">Porto Âmbar, a noite do Baile de Máscaras</div>
+                <p><span class="drop-cap">E</span>u achei que o Baile de Máscaras seria a minha grande aceitação. Lembro de entrar orgulhosa, vestindo a minha melhor criação, a saia do vestido tão armada que me sentia uma boneca, a pele intacta, o batom mais escuro e vermelho... Lembro de estar num salão deslumbrante, cercada por nobres cobertos de ouro, e de um sentimento sufocante: eu estava terrivelmente sozinha, invisível, um mero adorno. Depois disso... tudo se torna confuso. São apenas flashes.</p>
+            </div>
+
+            <div class="content-node page-6">
+                <h2>O Eclipse e o Recomeço</h2>
+                <div class="subtitle">Porto Âmbar, a noite do Baile de Máscaras</div>
+                <p>Outro flash. O sentimento de medo absoluto me sufocava. Olho ao redor, em pânico, e vejo vultos, dezenas de nobres, todos a passar exatamente pelo mesmo processo de transformação herética, a contorcerem-se na opulência daquele salão tão imponente. Pensei que ia morrer ali, esquecida por não ter contado a ninguém onde ia. No meio daquele transe de dor, a minha mente só gritava uma coisa: voltar para casa.</p>
+                <p>O vislumbre seguinte já é na rua. Lembro de correr desesperada, a cambalear pela escuridão de Porto Âmbar, guiada pelo puro instinto de sobrevivência até alcançar as portas da alfaiataria.</p>
+            </div>
+
+            <div class="content-node page-7">
+                <h2>O Eclipse e o Recomeço</h2>
+                <div class="subtitle">Porto Âmbar, a noite do Baile de Máscaras</div>
+                <p>O flash mais nítido e assustador é o da oficina. Eu, caída no chão, a chorar de dor, e o Elric a correr para me amparar, com o rosto desfigurado pelo pânico. No momento em que ele me tocou, o monstro acordou. O som do coração dele a bater era ensurdecedor, como um tambor a ecoar na minha cabeça. O cheiro do sangue dele despertou em mim uma fome imensurável, uma sede tão avassaladora que quase me fez perder a razão. Eu vi-me prestes a matá-lo... Quase o destruí.</p>
+                <p>But ele era a minha âncora. Num ato de desespero para salvá-lo, forcei-o a beber do meu sangue, sem entender o porquê, talvez por instinto.</p>
+            </div>
+
+            <div class="content-node page-8">
+                <h2>A Natureza da Fera e a Chave Desligada</h2>
+                <div class="subtitle">Porto Âmbar e Velmora, meses após a transformação</div>
+                <p><span class="drop-cap">A</span> imortalidade tem um preço, e nós tentamos barganhar com ele. No início, eu e Elric nos recusávamos a aceitar a nossa verdadeira natureza. Escondíamo-nos nas florestas ao redor de Porto Âmbar, caçando cervos e lobos, dilacerando animais selvagens na tentativa desesperada de calar o monstro. Mas a saciedade completa nunca vinha. O sangue das feras era ralo, amargo; deixava apenas um gosto cinzento na boca e uma queimação constante na garganta.</p>
+                <p>A verdade bateu à nossa porta de forma crua e violenta: para vivermos, nós teríamos que matar. Humanos.</p>
+            </div>
+
+            <div class="content-node page-9">
+                <h2>A Natureza da Fera e a Chave Desligada</h2>
+                <div class="subtitle">Porto Âmbar e Velmora, meses após a transformação</div>
+                <p>Mas o passado ainda era uma pendência que me sufocava. Decidi voltar a Velmora para visitar a minha mãe. No fundo, eu precisava daquele reencontro como um recordatório de onde eu saí para nunca esquecer aonde quero chegar, mas, de certa forma, no fundo do meu peito, havia também uma saudade velada. Uma carência humana e boba de ver o único rosto que me conhecia desde o início.</p>
+                <p>Quando empurrei a porta da velha boutique, encontrei Dona acamada. O quarto fedia a mofo, a panos velhos e a enfermidade. Ela estava definhando, fraca, mas a sua amargura continuava intacta. Ao vê-la naquela miséria, o meu impulso humano falou mais alto. Eu senti compaixão. Senti um vislumbre de sentimento e tentei ajudá-la. Aproximei-me do leito e ofereci-me para buscar a ajuda de algum curandeiro, disposta a pagar o que fosse para aliviar o seu sofrimento.</p>
+            </div>
+
+            <div class="content-node page-10">
+                <h2>A Natureza da Fera e a Chave Desligada</h2>
+                <div class="subtitle">Porto Âmbar e Velmora, meses após a transformação</div>
+                <p>Naquele milissegundo, eu ouvi o estalo. Uma chave girou na minha cabeça e desligou tudo o que restava da Melissa humana. Olhei para ela com o desapego de quem avalia um pedaço de pano estragado. Salvá-la? Curá-la? Pior... eu cheguei a pensar em dar o meu sangue e transformá-la ali mesmo. Que tolice a minha. Eu jamais iria desperdiçar a dádiva sagrada que Drácula me deu com alguém tão pequeno, medíocre e amargo como ela.</p>
+                <p>Ajeitei o caimento do meu vestido, limpei as minhas luvas com calma e encarei aquela mulher enferma na cama. Antes de lhe dar as costas, deixei o meu veneno ecoar no quarto com uma frieza cortante: <i>"Pois então aproveite o resto de sua vida efêmera, curta e miserável. Sozinha."</i></p>
+            </div>
+        </div>
+
+        <div class="spine"></div>
+
+        <div class="page-side">
+            <div class="content-node page-0 active">
+                <p>Quando bati o pé e disse a ela que meu bordado de ouro ia nos dar uma vida digna de corte, ela cuspiu no chão e riu na minha cara. Aquela risada amarga de quem já aceitou morrer na miséria. Ela me olhou com aquele ódio de sempre e disse que eu sou igualzinha ao meu pai, cheia de ambição, tola.</p>
+                <p>Ela está errada. Eu não sou ele. Eu não vou fugir para passar fome em outro canto; eu vou ser grande, vou me vestir com a mesma imponência daquela elite. Nem que eu precise sangrar costurando, eu não vou terminar cinzenta, acabada e feia como ela. Eu nasci para o luxo.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 0;">❦</p>
+            </div>
+
+            <div class="content-node page-1">
+                <p>Ela teve a audácia de dizer que eu sou um fardo. Eu, a única que se mata de trabalhar para trazer alguma coisa verdadeiramente bela e sofisticada para esse buraco! Joguei na cara dela a verdade: que o meu pai foi embora porque cansar-se da feiura e da pobreza dela era a única escolha óbvia. Ela acha que me quebrou trancada aqui no escuro?</p>
+                <p>Amanhã vou fingir que nada aconteceu. Mas quando a noite cair de verdade, eu vou pegar cada moeda de prata do caixa, vou roubar os vestidos mais caros, finos e bem bordados que eu mesma fiz para os nobres e vou sumir. Deixei uma carta cortante na mesa para ela saber: ela nunca mais vai me ver, a não ser quando eu triumfar e estiver no topo, vivendo cercada pela grandiosidade que ela nunca teve coragem de buscar. O espelho de Dona me dá medo. O mundo dos grandes não.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 0;">❦</p>
+            </div>
+
+            <div class="content-node page-2">
+                <p>Enquanto eu ajustava o caimento de seu vestido, ela olhou para as minhas roupas simples de costureira e me deu um conselho que mudou tudo. Ela me disse, com uma voz mansa e firme, que se eu quisesse alcançar o sucesso verdadeiro, eu deveria me vestir com ele primeiro; agir como se a glória já estivesse em minhas mãos, usando sempre as melhores roupas e me mantendo impecável, pois o mundo só te respeita quando você reflete o topo.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 15px 0 0 0;">▶</p>
+            </div>
+
+            <div class="content-node page-3">
+                <p>Pelo seu porte refinado e pela forma como se portava, tive certeza absoluta de que ele era um nobre excêntrico transbordando de ouro. Decidi atendê-lo com a maior maestria do mundo, determinada a arrancar cada moeda de prata dele para garantir minha ascensão.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 15px 0 0 0;">▶</p>
+            </div>
+
+            <div class="content-node page-4">
+                <p>Elric quis saber quem eu era de verdade por baixo daquela armadura de alta sociedade. Eu tentei resistir, mas acabei contando tudo: a boutique, o desprezo da minha mãe e o pavor paranoico de voltar à miséria. Ele me estendeu aquela mão mecânica aquecida pela forja e me aceitou por inteira. Ele era obstinado, focado, tão fominha por crescer e testar limites quanto eu. Encontrei nele uma cumplicidade real e minha dupla para a vida inteira.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 0;">❦</p>
+            </div>
+
+            <div class="content-node page-5">
+                <p>O primeiro borrão na minha mente é o palácio a girar. O ritual de sangue do Imperador Malekith começou, mas as minhas memórias são fragmentos de puro horror. Lembro da <i>vitae</i> fluir pelo meu corpo, e, no flash seguinte, o eclipse já tinha chegado lá fora, engolindo a lua. O Sol sangrou e a escuridão cobriu o céu e uma dor insuportável nublou a minha mente por completo. Não havia espaço para ambição, apenas uma agonia violenta que parecia rasgar os meus ossos e queimar as minhas veias.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 15px 0 0 0;">▶</p>
+            </div>
+
+            <div class="content-node page-6">
+                <p>O vislumbre seguinte já é na rua. Lembro de correr desesperada, a cambalear pela escuridão de Porto Âmbar, guiada pelo puro instinto de sobrevivência até alcançar as portas da alfaiataria.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 15px 0 0 0;">▶</p>
+            </div>
+
+            <div class="content-node page-7">
+                <p>A última lembrança daquela noite é o silêncio após a tormenta. O flash final eramos nós dois, caídos na oficina, transformados. A dor desapareceu. Quando olhei para as minhas mãos e a fraqueza humana já não estava lá, assim como o reflexo no espelho. Me senti revigorada. Poderosa.</p>
+                <p>Mesmo sem lembrar de cada detalhe daquela madrugada, a mensagem ficou clara: ali estava a nossa chance de recomeço. O sucesso, o ouro e o poder que sempre almejei agora seriam nossos e teriamos toda a eternidade para disfrutar cada gota daquilo. Serei eternamente grata ao meu Lorde Dracula por um presente como esse. Me vestir como tal realmente trouxe o que eu almejava, só não esperava que fosse tão agridoce. Dona Ruvaneth, você vai saber de mi.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 0;">❦</p>
+            </div>
+
+            <div class="content-node page-8">
+                <p>Descobrimos que a caça não precisava de garras, apenas de fios bem tecidos. No começo, escolhíamos pessoas dispersas, viajantes ou homens solitários que entravam na alfaiataria. Eu ainda estava a aprender as nuances do meu novo poder, mas percebi que a minha voz e o meu olhar tinham um magnetismo perigoso. Bastava uma hora de conversa comigo, um sorriso ensaiado entre as sedas e promessas veladas de intimidade, para convencer esses homens a seguirem-me. E assim, Elric e eu finalmente saciámos a fome algumas vezes. O sangue humano era quente, vivo, um êxtase que nos revigorava por completo. Tornámo-nos uma dupla perfeita.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 0;">❦</p>
+            </div>
+
+            <div class="content-node page-9">
+                <p>Mas o orgulho dela era mais destrutivo que a própria doença. Dona olhou para os meus trajes finos, cuspiu no chão e recusou. Disse, com a voz cheia de desprezo, que a verdadeira doença dela era o desgosto que eu lhe dava e que, como eu tinha voltado ali sem ter cumprido a promessa de me tornar uma verdadeira lady, ela preferia a morte a aceitar qualquer coisa vinda de mim.</p>
+                <div class="venom-box">
+                    "Você não passa de uma farsa, Melissa! Tira essas mãos nojentas de mim! Prefiro que os vermes me comam viva a aceitar um centavo seu..."
+                </div>
+            </div>
+
+            <div class="content-node page-10">
+                <p>Saí da boutique e caminhei pela rua com o meu melhor sorriso falso no rosto. Foi só quando ganhei a distância dos becos que senti as gotas quentes e teimosas borrarem a minha visão. Ergui os dedos, tocando a pele gélida, e limpei as lágrimas do rosto de uma vez por todas. Seriam as últimas. Naquele dia, decidi que também não beberia mais sangue de qualquer um. Eu não sou um bicho de esgoto para me alimentar de refugo ou misturar a minha vitae com a pobreza. Se o sangue é o poder, meu paladar agora só aceitará a elite. Eu nasci para o topo, e ninguém mais vai ousar questionar o meu porte.</p>
+                <p style="text-align: center; color: var(--gold); font-size: 1.8rem; margin: 0;">🪡</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="nav-btn" id="prevBtn" onclick="changePage(-1)">◀ ANTERIOR</button>
+            <button class="nav-btn" onclick="toggleIndex(true)">📜 ÍNDICE</button>
+            <span class="page-info" id="pageNumber">Página 1 de 11</span>
+            <button class="nav-btn" id="nextBtn" onclick="changePage(1)">PRÓXIMO ▶</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPage = 0;
+    const totalPages = 11;
+
+    function updateView() {
+        document.querySelectorAll('.content-node').forEach(node => {
+            node.classList.remove('active');
+        });
+
+        document.querySelectorAll(`.page-${currentPage}`).forEach(node => {
+            node.classList.add('active');
+        });
+
+        document.getElementById('pageNumber').innerText = `Página ${currentPage + 1} de ${totalPages}`;
+        
+        document.getElementById('prevBtn').disabled = (currentPage === 0);
+        document.getElementById('nextBtn').disabled = (currentPage === totalPages - 1);
+    }
+
+    function changePage(step) {
+        currentPage += step;
+        if(currentPage < 0) currentPage = 0;
+        if(currentPage >= totalPages) currentPage = totalPages - 1;
+        updateView();
+    }
+
+    function jumpToChapter(pageIndex) {
+        currentPage = pageIndex;
+        toggleIndex(false);
+        updateView();
+    }
+
+    function toggleIndex(show) {
+        document.getElementById('indexModal').style.display = show ? 'flex' : 'none';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === "ArrowRight") changePage(1);
+        if (e.key === "ArrowLeft") changePage(-1);
+    });
+
+    updateView();
+</script>
+
+</body>
+</html>
